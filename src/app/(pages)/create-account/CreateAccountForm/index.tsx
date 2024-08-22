@@ -5,11 +5,11 @@ import { useForm } from 'react-hook-form'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 
+import { addNewCustomerIfNonExist } from '../../../../hook/createAccounts'
 import { Button } from '../../../_components/Button'
 import { Input } from '../../../_components/Input'
 import { Message } from '../../../_components/Message'
 import { useAuth } from '../../../_providers/Auth'
-import { addNewCustomerIfNonExist } from '../../../hook/createAccounts'
 
 import classes from './index.module.scss'
 
@@ -65,7 +65,7 @@ const CreateAccountForm: React.FC = () => {
         addNewCustomerIfNonExist(
           {
           "Name": data.name,
-          "Phone_No":"254700679275",
+          "Phone_No":"254710679275",
           "E_Mail": data.email,
           "Customer_Price_Group":"RETAIL MKT",
           "Customer_Disc_Group":"CASH",
