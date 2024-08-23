@@ -1080,6 +1080,7 @@ type Category {
   id: String
   title: String!
   media(where: Category_Media_where): Media
+  code: String!
   parent: Category
   breadcrumbs: [Category_Breadcrumbs!]
   updatedAt: DateTime
@@ -1271,7 +1272,9 @@ type Product {
   title: String
   publishedOn: DateTime
   layout: [Product_Layout!]
-  stripeProductID: String
+  bcProductID: String
+  inventory: Float
+  unitPrice: Float
   priceJSON: String
   enablePaywall: Boolean
   paywall: [Product_Paywall!]
@@ -3598,7 +3601,9 @@ type Products {
 input Product_where {
   title: Product_title_operator
   publishedOn: Product_publishedOn_operator
-  stripeProductID: Product_stripeProductID_operator
+  bcProductID: Product_bcProductID_operator
+  inventory: Product_inventory_operator
+  unitPrice: Product_unitPrice_operator
   priceJSON: Product_priceJSON_operator
   enablePaywall: Product_enablePaywall_operator
   categories: Product_categories_operator
@@ -3637,7 +3642,7 @@ input Product_publishedOn_operator {
   exists: Boolean
 }
 
-input Product_stripeProductID_operator {
+input Product_bcProductID_operator {
   equals: String
   not_equals: String
   like: String
@@ -3645,6 +3650,26 @@ input Product_stripeProductID_operator {
   in: [String]
   not_in: [String]
   all: [String]
+  exists: Boolean
+}
+
+input Product_inventory_operator {
+  equals: Float
+  not_equals: Float
+  greater_than_equal: Float
+  greater_than: Float
+  less_than_equal: Float
+  less_than: Float
+  exists: Boolean
+}
+
+input Product_unitPrice_operator {
+  equals: Float
+  not_equals: Float
+  greater_than_equal: Float
+  greater_than: Float
+  less_than_equal: Float
+  less_than: Float
   exists: Boolean
 }
 
@@ -3772,7 +3797,9 @@ input Product_id_operator {
 input Product_where_and {
   title: Product_title_operator
   publishedOn: Product_publishedOn_operator
-  stripeProductID: Product_stripeProductID_operator
+  bcProductID: Product_bcProductID_operator
+  inventory: Product_inventory_operator
+  unitPrice: Product_unitPrice_operator
   priceJSON: Product_priceJSON_operator
   enablePaywall: Product_enablePaywall_operator
   categories: Product_categories_operator
@@ -3793,7 +3820,9 @@ input Product_where_and {
 input Product_where_or {
   title: Product_title_operator
   publishedOn: Product_publishedOn_operator
-  stripeProductID: Product_stripeProductID_operator
+  bcProductID: Product_bcProductID_operator
+  inventory: Product_inventory_operator
+  unitPrice: Product_unitPrice_operator
   priceJSON: Product_priceJSON_operator
   enablePaywall: Product_enablePaywall_operator
   categories: Product_categories_operator
@@ -3824,7 +3853,9 @@ type ProductsDocAccessFields {
   title: ProductsDocAccessFields_title
   publishedOn: ProductsDocAccessFields_publishedOn
   layout: ProductsDocAccessFields_layout
-  stripeProductID: ProductsDocAccessFields_stripeProductID
+  bcProductID: ProductsDocAccessFields_bcProductID
+  inventory: ProductsDocAccessFields_inventory
+  unitPrice: ProductsDocAccessFields_unitPrice
   priceJSON: ProductsDocAccessFields_priceJSON
   enablePaywall: ProductsDocAccessFields_enablePaywall
   paywall: ProductsDocAccessFields_paywall
@@ -3907,26 +3938,72 @@ type ProductsDocAccessFields_layout_Delete {
   permission: Boolean!
 }
 
-type ProductsDocAccessFields_stripeProductID {
-  create: ProductsDocAccessFields_stripeProductID_Create
-  read: ProductsDocAccessFields_stripeProductID_Read
-  update: ProductsDocAccessFields_stripeProductID_Update
-  delete: ProductsDocAccessFields_stripeProductID_Delete
+type ProductsDocAccessFields_bcProductID {
+  create: ProductsDocAccessFields_bcProductID_Create
+  read: ProductsDocAccessFields_bcProductID_Read
+  update: ProductsDocAccessFields_bcProductID_Update
+  delete: ProductsDocAccessFields_bcProductID_Delete
 }
 
-type ProductsDocAccessFields_stripeProductID_Create {
+type ProductsDocAccessFields_bcProductID_Create {
   permission: Boolean!
 }
 
-type ProductsDocAccessFields_stripeProductID_Read {
+type ProductsDocAccessFields_bcProductID_Read {
   permission: Boolean!
 }
 
-type ProductsDocAccessFields_stripeProductID_Update {
+type ProductsDocAccessFields_bcProductID_Update {
   permission: Boolean!
 }
 
-type ProductsDocAccessFields_stripeProductID_Delete {
+type ProductsDocAccessFields_bcProductID_Delete {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_inventory {
+  create: ProductsDocAccessFields_inventory_Create
+  read: ProductsDocAccessFields_inventory_Read
+  update: ProductsDocAccessFields_inventory_Update
+  delete: ProductsDocAccessFields_inventory_Delete
+}
+
+type ProductsDocAccessFields_inventory_Create {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_inventory_Read {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_inventory_Update {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_inventory_Delete {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_unitPrice {
+  create: ProductsDocAccessFields_unitPrice_Create
+  read: ProductsDocAccessFields_unitPrice_Read
+  update: ProductsDocAccessFields_unitPrice_Update
+  delete: ProductsDocAccessFields_unitPrice_Delete
+}
+
+type ProductsDocAccessFields_unitPrice_Create {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_unitPrice_Read {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_unitPrice_Update {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_unitPrice_Delete {
   permission: Boolean!
 }
 
@@ -4345,7 +4422,9 @@ type ProductVersion_Version {
   title: String
   publishedOn: DateTime
   layout: [ProductVersion_Version_Layout!]
-  stripeProductID: String
+  bcProductID: String
+  inventory: Float
+  unitPrice: Float
   priceJSON: String
   enablePaywall: Boolean
   paywall: [ProductVersion_Version_Paywall!]
@@ -4554,7 +4633,9 @@ input versionsProduct_where {
   parent: versionsProduct_parent_operator
   version__title: versionsProduct_version__title_operator
   version__publishedOn: versionsProduct_version__publishedOn_operator
-  version__stripeProductID: versionsProduct_version__stripeProductID_operator
+  version__bcProductID: versionsProduct_version__bcProductID_operator
+  version__inventory: versionsProduct_version__inventory_operator
+  version__unitPrice: versionsProduct_version__unitPrice_operator
   version__priceJSON: versionsProduct_version__priceJSON_operator
   version__enablePaywall: versionsProduct_version__enablePaywall_operator
   version__categories: versionsProduct_version__categories_operator
@@ -4605,7 +4686,7 @@ input versionsProduct_version__publishedOn_operator {
   exists: Boolean
 }
 
-input versionsProduct_version__stripeProductID_operator {
+input versionsProduct_version__bcProductID_operator {
   equals: String
   not_equals: String
   like: String
@@ -4613,6 +4694,26 @@ input versionsProduct_version__stripeProductID_operator {
   in: [String]
   not_in: [String]
   all: [String]
+  exists: Boolean
+}
+
+input versionsProduct_version__inventory_operator {
+  equals: Float
+  not_equals: Float
+  greater_than_equal: Float
+  greater_than: Float
+  less_than_equal: Float
+  less_than: Float
+  exists: Boolean
+}
+
+input versionsProduct_version__unitPrice_operator {
+  equals: Float
+  not_equals: Float
+  greater_than_equal: Float
+  greater_than: Float
+  less_than_equal: Float
+  less_than: Float
   exists: Boolean
 }
 
@@ -4769,7 +4870,9 @@ input versionsProduct_where_and {
   parent: versionsProduct_parent_operator
   version__title: versionsProduct_version__title_operator
   version__publishedOn: versionsProduct_version__publishedOn_operator
-  version__stripeProductID: versionsProduct_version__stripeProductID_operator
+  version__bcProductID: versionsProduct_version__bcProductID_operator
+  version__inventory: versionsProduct_version__inventory_operator
+  version__unitPrice: versionsProduct_version__unitPrice_operator
   version__priceJSON: versionsProduct_version__priceJSON_operator
   version__enablePaywall: versionsProduct_version__enablePaywall_operator
   version__categories: versionsProduct_version__categories_operator
@@ -4794,7 +4897,9 @@ input versionsProduct_where_or {
   parent: versionsProduct_parent_operator
   version__title: versionsProduct_version__title_operator
   version__publishedOn: versionsProduct_version__publishedOn_operator
-  version__stripeProductID: versionsProduct_version__stripeProductID_operator
+  version__bcProductID: versionsProduct_version__bcProductID_operator
+  version__inventory: versionsProduct_version__inventory_operator
+  version__unitPrice: versionsProduct_version__unitPrice_operator
   version__priceJSON: versionsProduct_version__priceJSON_operator
   version__enablePaywall: versionsProduct_version__enablePaywall_operator
   version__categories: versionsProduct_version__categories_operator
@@ -4830,7 +4935,7 @@ type User {
   name: String
   roles: [User_roles!]
   purchases: [Product!]
-  stripeCustomerID: String
+  bcCustomerID: String
   cart: User_Cart
   skipSync: Boolean
   updatedAt: DateTime
@@ -5771,6 +5876,7 @@ type Categories {
 input Category_where {
   title: Category_title_operator
   media: Category_media_operator
+  code: Category_code_operator
   parent: Category_parent_operator
   breadcrumbs__doc: Category_breadcrumbs__doc_operator
   breadcrumbs__url: Category_breadcrumbs__url_operator
@@ -5797,6 +5903,16 @@ input Category_media_operator {
   equals: String
   not_equals: String
   exists: Boolean
+}
+
+input Category_code_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
 }
 
 input Category_parent_operator {
@@ -5886,6 +6002,7 @@ input Category_id_operator {
 input Category_where_and {
   title: Category_title_operator
   media: Category_media_operator
+  code: Category_code_operator
   parent: Category_parent_operator
   breadcrumbs__doc: Category_breadcrumbs__doc_operator
   breadcrumbs__url: Category_breadcrumbs__url_operator
@@ -5901,6 +6018,7 @@ input Category_where_and {
 input Category_where_or {
   title: Category_title_operator
   media: Category_media_operator
+  code: Category_code_operator
   parent: Category_parent_operator
   breadcrumbs__doc: Category_breadcrumbs__doc_operator
   breadcrumbs__url: Category_breadcrumbs__url_operator
@@ -5924,6 +6042,7 @@ type categoriesDocAccess {
 type CategoriesDocAccessFields {
   title: CategoriesDocAccessFields_title
   media: CategoriesDocAccessFields_media
+  code: CategoriesDocAccessFields_code
   parent: CategoriesDocAccessFields_parent
   breadcrumbs: CategoriesDocAccessFields_breadcrumbs
   updatedAt: CategoriesDocAccessFields_updatedAt
@@ -5973,6 +6092,29 @@ type CategoriesDocAccessFields_media_Update {
 }
 
 type CategoriesDocAccessFields_media_Delete {
+  permission: Boolean!
+}
+
+type CategoriesDocAccessFields_code {
+  create: CategoriesDocAccessFields_code_Create
+  read: CategoriesDocAccessFields_code_Read
+  update: CategoriesDocAccessFields_code_Update
+  delete: CategoriesDocAccessFields_code_Delete
+}
+
+type CategoriesDocAccessFields_code_Create {
+  permission: Boolean!
+}
+
+type CategoriesDocAccessFields_code_Read {
+  permission: Boolean!
+}
+
+type CategoriesDocAccessFields_code_Update {
+  permission: Boolean!
+}
+
+type CategoriesDocAccessFields_code_Delete {
   permission: Boolean!
 }
 
@@ -6206,7 +6348,7 @@ input User_where {
   name: User_name_operator
   roles: User_roles_operator
   purchases: User_purchases_operator
-  stripeCustomerID: User_stripeCustomerID_operator
+  bcCustomerID: User_bcCustomerID_operator
   cart__items__product: User_cart__items__product_operator
   cart__items__quantity: User_cart__items__quantity_operator
   cart__items__id: User_cart__items__id_operator
@@ -6253,7 +6395,7 @@ input User_purchases_operator {
   exists: Boolean
 }
 
-input User_stripeCustomerID_operator {
+input User_bcCustomerID_operator {
   equals: String
   not_equals: String
   like: String
@@ -6347,7 +6489,7 @@ input User_where_and {
   name: User_name_operator
   roles: User_roles_operator
   purchases: User_purchases_operator
-  stripeCustomerID: User_stripeCustomerID_operator
+  bcCustomerID: User_bcCustomerID_operator
   cart__items__product: User_cart__items__product_operator
   cart__items__quantity: User_cart__items__quantity_operator
   cart__items__id: User_cart__items__id_operator
@@ -6364,7 +6506,7 @@ input User_where_or {
   name: User_name_operator
   roles: User_roles_operator
   purchases: User_purchases_operator
-  stripeCustomerID: User_stripeCustomerID_operator
+  bcCustomerID: User_bcCustomerID_operator
   cart__items__product: User_cart__items__product_operator
   cart__items__quantity: User_cart__items__quantity_operator
   cart__items__id: User_cart__items__id_operator
@@ -6390,7 +6532,7 @@ type UsersDocAccessFields {
   name: UsersDocAccessFields_name
   roles: UsersDocAccessFields_roles
   purchases: UsersDocAccessFields_purchases
-  stripeCustomerID: UsersDocAccessFields_stripeCustomerID
+  bcCustomerID: UsersDocAccessFields_bcCustomerID
   cart: UsersDocAccessFields_cart
   skipSync: UsersDocAccessFields_skipSync
   updatedAt: UsersDocAccessFields_updatedAt
@@ -6468,26 +6610,26 @@ type UsersDocAccessFields_purchases_Delete {
   permission: Boolean!
 }
 
-type UsersDocAccessFields_stripeCustomerID {
-  create: UsersDocAccessFields_stripeCustomerID_Create
-  read: UsersDocAccessFields_stripeCustomerID_Read
-  update: UsersDocAccessFields_stripeCustomerID_Update
-  delete: UsersDocAccessFields_stripeCustomerID_Delete
+type UsersDocAccessFields_bcCustomerID {
+  create: UsersDocAccessFields_bcCustomerID_Create
+  read: UsersDocAccessFields_bcCustomerID_Read
+  update: UsersDocAccessFields_bcCustomerID_Update
+  delete: UsersDocAccessFields_bcCustomerID_Delete
 }
 
-type UsersDocAccessFields_stripeCustomerID_Create {
+type UsersDocAccessFields_bcCustomerID_Create {
   permission: Boolean!
 }
 
-type UsersDocAccessFields_stripeCustomerID_Read {
+type UsersDocAccessFields_bcCustomerID_Read {
   permission: Boolean!
 }
 
-type UsersDocAccessFields_stripeCustomerID_Update {
+type UsersDocAccessFields_bcCustomerID_Update {
   permission: Boolean!
 }
 
-type UsersDocAccessFields_stripeCustomerID_Delete {
+type UsersDocAccessFields_bcCustomerID_Delete {
   permission: Boolean!
 }
 
@@ -9235,7 +9377,9 @@ type ProductsFields {
   title: ProductsFields_title
   publishedOn: ProductsFields_publishedOn
   layout: ProductsFields_layout
-  stripeProductID: ProductsFields_stripeProductID
+  bcProductID: ProductsFields_bcProductID
+  inventory: ProductsFields_inventory
+  unitPrice: ProductsFields_unitPrice
   priceJSON: ProductsFields_priceJSON
   enablePaywall: ProductsFields_enablePaywall
   paywall: ProductsFields_paywall
@@ -9318,26 +9462,72 @@ type ProductsFields_layout_Delete {
   permission: Boolean!
 }
 
-type ProductsFields_stripeProductID {
-  create: ProductsFields_stripeProductID_Create
-  read: ProductsFields_stripeProductID_Read
-  update: ProductsFields_stripeProductID_Update
-  delete: ProductsFields_stripeProductID_Delete
+type ProductsFields_bcProductID {
+  create: ProductsFields_bcProductID_Create
+  read: ProductsFields_bcProductID_Read
+  update: ProductsFields_bcProductID_Update
+  delete: ProductsFields_bcProductID_Delete
 }
 
-type ProductsFields_stripeProductID_Create {
+type ProductsFields_bcProductID_Create {
   permission: Boolean!
 }
 
-type ProductsFields_stripeProductID_Read {
+type ProductsFields_bcProductID_Read {
   permission: Boolean!
 }
 
-type ProductsFields_stripeProductID_Update {
+type ProductsFields_bcProductID_Update {
   permission: Boolean!
 }
 
-type ProductsFields_stripeProductID_Delete {
+type ProductsFields_bcProductID_Delete {
+  permission: Boolean!
+}
+
+type ProductsFields_inventory {
+  create: ProductsFields_inventory_Create
+  read: ProductsFields_inventory_Read
+  update: ProductsFields_inventory_Update
+  delete: ProductsFields_inventory_Delete
+}
+
+type ProductsFields_inventory_Create {
+  permission: Boolean!
+}
+
+type ProductsFields_inventory_Read {
+  permission: Boolean!
+}
+
+type ProductsFields_inventory_Update {
+  permission: Boolean!
+}
+
+type ProductsFields_inventory_Delete {
+  permission: Boolean!
+}
+
+type ProductsFields_unitPrice {
+  create: ProductsFields_unitPrice_Create
+  read: ProductsFields_unitPrice_Read
+  update: ProductsFields_unitPrice_Update
+  delete: ProductsFields_unitPrice_Delete
+}
+
+type ProductsFields_unitPrice_Create {
+  permission: Boolean!
+}
+
+type ProductsFields_unitPrice_Read {
+  permission: Boolean!
+}
+
+type ProductsFields_unitPrice_Update {
+  permission: Boolean!
+}
+
+type ProductsFields_unitPrice_Delete {
   permission: Boolean!
 }
 
@@ -10300,6 +10490,7 @@ type categoriesAccess {
 type CategoriesFields {
   title: CategoriesFields_title
   media: CategoriesFields_media
+  code: CategoriesFields_code
   parent: CategoriesFields_parent
   breadcrumbs: CategoriesFields_breadcrumbs
   updatedAt: CategoriesFields_updatedAt
@@ -10349,6 +10540,29 @@ type CategoriesFields_media_Update {
 }
 
 type CategoriesFields_media_Delete {
+  permission: Boolean!
+}
+
+type CategoriesFields_code {
+  create: CategoriesFields_code_Create
+  read: CategoriesFields_code_Read
+  update: CategoriesFields_code_Update
+  delete: CategoriesFields_code_Delete
+}
+
+type CategoriesFields_code_Create {
+  permission: Boolean!
+}
+
+type CategoriesFields_code_Read {
+  permission: Boolean!
+}
+
+type CategoriesFields_code_Update {
+  permission: Boolean!
+}
+
+type CategoriesFields_code_Delete {
   permission: Boolean!
 }
 
@@ -10577,7 +10791,7 @@ type UsersFields {
   name: UsersFields_name
   roles: UsersFields_roles
   purchases: UsersFields_purchases
-  stripeCustomerID: UsersFields_stripeCustomerID
+  bcCustomerID: UsersFields_bcCustomerID
   cart: UsersFields_cart
   skipSync: UsersFields_skipSync
   updatedAt: UsersFields_updatedAt
@@ -10655,26 +10869,26 @@ type UsersFields_purchases_Delete {
   permission: Boolean!
 }
 
-type UsersFields_stripeCustomerID {
-  create: UsersFields_stripeCustomerID_Create
-  read: UsersFields_stripeCustomerID_Read
-  update: UsersFields_stripeCustomerID_Update
-  delete: UsersFields_stripeCustomerID_Delete
+type UsersFields_bcCustomerID {
+  create: UsersFields_bcCustomerID_Create
+  read: UsersFields_bcCustomerID_Read
+  update: UsersFields_bcCustomerID_Update
+  delete: UsersFields_bcCustomerID_Delete
 }
 
-type UsersFields_stripeCustomerID_Create {
+type UsersFields_bcCustomerID_Create {
   permission: Boolean!
 }
 
-type UsersFields_stripeCustomerID_Read {
+type UsersFields_bcCustomerID_Read {
   permission: Boolean!
 }
 
-type UsersFields_stripeCustomerID_Update {
+type UsersFields_bcCustomerID_Update {
   permission: Boolean!
 }
 
-type UsersFields_stripeCustomerID_Delete {
+type UsersFields_bcCustomerID_Delete {
   permission: Boolean!
 }
 
@@ -12175,7 +12389,9 @@ input mutationProductInput {
   title: String!
   publishedOn: String
   layout: JSON
-  stripeProductID: String
+  bcProductID: String
+  inventory: Float
+  unitPrice: Float
   priceJSON: String
   enablePaywall: Boolean
   paywall: JSON
@@ -12204,7 +12420,9 @@ input mutationProductUpdateInput {
   title: String
   publishedOn: String
   layout: JSON
-  stripeProductID: String
+  bcProductID: String
+  inventory: Float
+  unitPrice: Float
   priceJSON: String
   enablePaywall: Boolean
   paywall: JSON
@@ -12290,6 +12508,7 @@ input mutationMediaUpdateInput {
 input mutationCategoryInput {
   title: String!
   media: String
+  code: String!
   parent: String
   breadcrumbs: [mutationCategory_BreadcrumbsInput]
   updatedAt: String
@@ -12306,6 +12525,7 @@ input mutationCategory_BreadcrumbsInput {
 input mutationCategoryUpdateInput {
   title: String
   media: String
+  code: String
   parent: String
   breadcrumbs: [mutationCategoryUpdate_BreadcrumbsInput]
   updatedAt: String
@@ -12323,7 +12543,7 @@ input mutationUserInput {
   name: String
   roles: [User_roles_MutationInput]
   purchases: [String]
-  stripeCustomerID: String
+  bcCustomerID: String
   cart: mutationUser_CartInput
   skipSync: Boolean
   updatedAt: String
@@ -12357,7 +12577,7 @@ input mutationUserUpdateInput {
   name: String
   roles: [UserUpdate_roles_MutationInput]
   purchases: [String]
-  stripeCustomerID: String
+  bcCustomerID: String
   cart: mutationUserUpdate_CartInput
   skipSync: Boolean
   updatedAt: String

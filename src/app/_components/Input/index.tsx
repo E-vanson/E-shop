@@ -1,5 +1,5 @@
 import React from 'react'
-import { FieldValues, UseFormRegister, Validate } from 'react-hook-form'
+import { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import classes from './index.module.scss'
 
@@ -9,9 +9,11 @@ type Props = {
   register: UseFormRegister<FieldValues & any>
   required?: boolean
   error: any
-  type?: 'text' | 'number' | 'password' | 'email'
+  type?: 'text' | 'number' | 'password' | 'email' | 'tel'
   validate?: (value: string) => boolean | string
   disabled?: boolean
+  pattern: string;
+  placeholder: string;
 }
 
 export const Input: React.FC<Props> = ({
@@ -23,10 +25,12 @@ export const Input: React.FC<Props> = ({
   type = 'text',
   validate,
   disabled,
+  pattern,
+  placeholder,
 }) => {
   return (
     <div className={classes.inputWrap}>
-      <label htmlFor="name" className={classes.label}>
+      <label htmlFor={name} className={classes.label}>
         {label}
         {required ? <span className={classes.asterisk}>&nbsp;*</span> : ''}
       </label>
@@ -46,7 +50,12 @@ export const Input: React.FC<Props> = ({
             : {}),
         })}
         disabled={disabled}
+        name={name}
+        placeholder={placeholder}
       />
+      {type === 'tel' && !error && (
+        <div className={classes.hintMessage}>Include your country code e.g +254</div>
+      )}
       {error && (
         <div className={classes.errorMessage}>
           {!error?.message && error?.type === 'required'

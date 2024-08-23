@@ -2,6 +2,7 @@
 
 import React, { useCallback, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { parsePhoneNumber } from 'libphonenumber-js'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -13,11 +14,15 @@ import { addNewCustomerIfNonExist } from '../../../hook/createAccounts'
 
 import classes from './index.module.scss'
 
+
 type FormData = {
   name: string
   email: string
+  phoneNumber: string
   password: string
   passwordConfirm: string
+
+  
 }
 
 const CreateAccountForm: React.FC = () => {
@@ -39,11 +44,24 @@ const CreateAccountForm: React.FC = () => {
   const password = useRef({})
   password.current = watch('password', '')
 
+  const validatePhoneNumber = (value: string) => {
+    if (!value.startsWith('+')) {
+      return 'Phone number must start with a country code (e.g, +254 for Kenya)'
+    }
+
+    try {
+      const phoneNumber = parsePhoneNumber(value)
+      return phoneNumber.isValid() || 'Please enter a valid phone number'
+    } catch (error) {
+      return 'Please enter a valid phone number'
+    }
+  }
+
   const onSubmit = useCallback(
     async (data: FormData) => {
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, phoneNumber: data.phoneNumber.replace('+', '') }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -61,33 +79,11 @@ const CreateAccountForm: React.FC = () => {
         setLoading(true)
       }, 1000)
 
-      if (response.ok) {
-        addNewCustomerIfNonExist(
-          {
-          "Name": data.name,
-          "Phone_No":"254700679275",
-          "E_Mail": data.email,
-          "Customer_Price_Group":"RETAIL MKT",
-          "Customer_Disc_Group":"CASH",
-          "Customer_Posting_Group":"TRADE",
-          "Gen_Bus_Posting_Group":"LOCAL",
-          "VAT_Bus_Posting_Group":"LOCAL",
-          "Payment_Terms_Code":"CASH",
-          },
-          setSuccess,
-          setError
-        )
-        // getExistingCustomer(
-        //   "254722679275"
-        // )
-      }
-
       try {
         await login(data)
         clearTimeout(timer)
         if (redirect) router.push(redirect as string)
-        else router.push(`/`)
-      window.location.href = '/'
+        else router.push(`/account?success=${encodeURIComponent('Account created successfully')}`)
       } catch (_) {
         clearTimeout(timer)
         setError('There was an error with the credentials provided. Please try again.')
@@ -98,11 +94,6 @@ const CreateAccountForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={classes.form}>
-      <p>
-        {`This is where new customers can signup and create a new account. To manage all users, `}
-        <Link href="/admin/collections/users">login to the admin dashboard</Link>
-        {'.'}
-      </p>
       <Message error={error} success={success} className={classes.message} />
       <Input
         name="email"
@@ -111,6 +102,8 @@ const CreateAccountForm: React.FC = () => {
         register={register}
         error={errors.email}
         type="email"
+        placeholder="Enter your email"
+        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
       />
       <Input
         name="name"
@@ -119,6 +112,18 @@ const CreateAccountForm: React.FC = () => {
         register={register}
         error={errors.name}
         type="text"
+        placeholder="Enter your full name"
+        pattern="^[a-zA-Z\s]+$"
+      />
+      <Input
+        name="phoneNumber"
+        label="Phone Number"
+        required
+        register={register}
+        error={errors.phoneNumber}
+        type="text"
+        placeholder="072200000"
+        pattern="^(07|01)\d{8}$"
       />
       
       <Input
@@ -128,6 +133,8 @@ const CreateAccountForm: React.FC = () => {
         required
         register={register}
         error={errors.password}
+        placeholder='Password must be at least 8 characters long'
+        pattern=".*" // Add the pattern property with a valid regular expression to enforce a password policy.
       />
       <Input
         name="passwordConfirm"
@@ -137,6 +144,8 @@ const CreateAccountForm: React.FC = () => {
         register={register}
         validate={value => value === password.current || 'The passwords do not match'}
         error={errors.passwordConfirm}
+        pattern=".*" // Add the pattern property with a valid regular expression
+        placeholder="Enter your password again"
       />
       <Button
         type="submit"

@@ -180,6 +180,7 @@ export interface Category {
   id: string;
   title: string;
   media?: string | Media | null;
+  code: string;
   parent?: (string | null) | Category;
   breadcrumbs?:
     | {
@@ -288,6 +289,9 @@ export interface Product {
       )[]
     | null;
   stripeProductID?: string | null;
+  bcProductID?: string | null;
+  inventory?: number | null;
+  unitPrice?: number | null;
   priceJSON?: string | null;
   enablePaywall?: boolean | null;
   paywall?:
@@ -416,6 +420,7 @@ export interface User {
   roles?: ('admin' | 'customer')[] | null;
   purchases?: (string | Product)[] | null;
   stripeCustomerID?: string | null;
+  bcCustomerID?: string | null;
   cart?: {
     items?: CartItems;
   };
