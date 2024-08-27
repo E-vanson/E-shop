@@ -76,7 +76,7 @@ export const createPaymentIntent: PayloadHandler = async (req, res): Promise<voi
           limit: 100,
           expand: ['data.product'],
         })
-
+       
         if (prices.data.length === 0) {
           res.status(404).json({ error: 'There are no items in your cart to checkout with' })
           return null
@@ -96,7 +96,7 @@ export const createPaymentIntent: PayloadHandler = async (req, res): Promise<voi
     const paymentIntent = await stripe.paymentIntents.create({
       customer: stripeCustomerID,
       amount: total,
-      currency: 'usd',
+      currency: 'kes',
       payment_method_types: ['card'],
     })
 

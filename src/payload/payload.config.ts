@@ -3,9 +3,9 @@ import { mongooseAdapter } from '@payloadcms/db-mongodb' // database-adapter-imp
 import { payloadCloud } from '@payloadcms/plugin-cloud'
 import nestedDocs from '@payloadcms/plugin-nested-docs'
 import redirects from '@payloadcms/plugin-redirects'
+import search from '@payloadcms/plugin-search'
 import seo from '@payloadcms/plugin-seo'
 import type { GenerateTitle } from '@payloadcms/plugin-seo/types'
-import stripePlugin from '@payloadcms/plugin-stripe'
 import { slateEditor } from '@payloadcms/richtext-slate' // editor-import
 import dotenv from 'dotenv'
 import path from 'path'
@@ -15,19 +15,16 @@ import Categories from './collections/Categories'
 import { Media } from './collections/Media'
 import { Orders } from './collections/Orders'
 import { Pages } from './collections/Pages'
+import { ProductNotifications } from './collections/ProductNotifications'
 import Products from './collections/Products'
 import Users from './collections/Users'
 import BeforeDashboard from './components/BeforeDashboard'
 import BeforeLogin from './components/BeforeLogin'
-import { createPaymentIntent } from './endpoints/create-payment-intent'
-import { customersProxy } from './endpoints/customers'
-import { productsProxy } from './endpoints/products'
 import { seed } from './endpoints/seed'
 import { Footer } from './globals/Footer'
 import { Header } from './globals/Header'
 import { Settings } from './globals/Settings'
-import { priceUpdated } from './stripe/webhooks/priceUpdated'
-import { productUpdated } from './stripe/webhooks/productUpdated'
+import ipn from './pesapal/endpoints/ipn'
 
 const generateTitle: GenerateTitle = () => {
   return 'My Store'
@@ -62,15 +59,12 @@ export default buildConfig({
           alias: {
             ...config.resolve?.alias,
             dotenv: path.resolve(__dirname, './dotenv.js'),
-            [path.resolve(__dirname, 'collections/Products/hooks/beforeChange')]: mockModulePath,
-            [path.resolve(__dirname, 'collections/Users/hooks/createStripeCustomer')]:
-              mockModulePath,
-            [path.resolve(__dirname, 'collections/Users/endpoints/customer')]: mockModulePath,
-            [path.resolve(__dirname, 'endpoints/create-payment-intent')]: mockModulePath,
-            [path.resolve(__dirname, 'endpoints/customers')]: mockModulePath,
             [path.resolve(__dirname, 'endpoints/products')]: mockModulePath,
             [path.resolve(__dirname, 'endpoints/seed')]: mockModulePath,
-            stripe: mockModulePath,
+            [path.resolve(__dirname, 'pesapal/endpoints/ipn')]: mockModulePath,
+            [path.resolve(__dirname, 'pesapal/endpoints/getPesapalAccessToken')]: mockModulePath,
+            [path.resolve(__dirname, 'pesapal/endpoints/getPesapalTransactionStatus')]: mockModulePath,
+            [path.resolve(__dirname, 'pesapal/endpoints/submitOrderRequest')]: mockModulePath,
             express: mockModulePath,
           },
         },
@@ -84,7 +78,7 @@ export default buildConfig({
   }),
   // database-adapter-config-end
   serverURL: process.env.PAYLOAD_PUBLIC_BASE_DNS,
-  collections: [Pages, Products, Orders, Media, Categories, Users],
+  collections: [Pages, Products, Orders, Media, Categories, Users, ProductNotifications],
   globals: [Settings, Header, Footer],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
@@ -100,19 +94,9 @@ export default buildConfig({
   ),
   endpoints: [
     {
-      path: '/create-payment-intent',
+      path: '/ipn',
       method: 'post',
-      handler: createPaymentIntent,
-    },
-    {
-      path: '/stripe/customers',
-      method: 'get',
-      handler: customersProxy,
-    },
-    {
-      path: '/stripe/products',
-      method: 'get',
-      handler: productsProxy,
+      handler: ipn,
     },
     // The seed endpoint is used to populate the database with some example data
     // You should delete this endpoint before deploying your site to production
@@ -123,17 +107,6 @@ export default buildConfig({
     },
   ],
   plugins: [
-    stripePlugin({
-      stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
-      isTestKey: Boolean(process.env.PAYLOAD_PUBLIC_STRIPE_IS_TEST_KEY),
-      stripeWebhooksEndpointSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET,
-      rest: false,
-      webhooks: {
-        'product.created': productUpdated,
-        'product.updated': productUpdated,
-        'price.updated': priceUpdated,
-      },
-    }),
     redirects({
       collections: ['pages', 'products'],
     }),
@@ -146,5 +119,11 @@ export default buildConfig({
       uploadsCollection: 'media',
     }),
     payloadCloud(),
+    search({
+      collections: ['products'],
+      defaultPriorities: {
+        pages: 20,
+      },
+    }),
   ],
 })

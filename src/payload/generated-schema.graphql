@@ -23,9 +23,15 @@ type Query {
   docAccessUser(id: String!): usersDocAccess
   meUser: usersMe
   initializedUser: Boolean
+  ProductNotification(id: String!, draft: Boolean): ProductNotification
+  ProductNotifications(draft: Boolean, where: ProductNotification_where, limit: Int, page: Int, sort: String): ProductNotifications
+  docAccessProductNotification(id: String!): productNotificationsDocAccess
   Redirect(id: String!, draft: Boolean): Redirect
   Redirects(draft: Boolean, where: Redirect_where, limit: Int, page: Int, sort: String): Redirects
   docAccessRedirect(id: String!): redirectsDocAccess
+  Search(id: String!, draft: Boolean): Search
+  Searches(draft: Boolean, where: Search_where, limit: Int, page: Int, sort: String): Searches
+  docAccessSearch(id: String!): searchDocAccess
   PayloadPreference(id: String!, draft: Boolean): PayloadPreference
   PayloadPreferences(draft: Boolean, where: PayloadPreference_where, limit: Int, page: Int, sort: String): PayloadPreferences
   docAccessPayloadPreference(id: String!): payload_preferencesDocAccess
@@ -1272,6 +1278,7 @@ type Product {
   title: String
   publishedOn: DateTime
   layout: [Product_Layout!]
+  stripeProductID: String
   bcProductID: String
   inventory: Float
   unitPrice: Float
@@ -3601,6 +3608,7 @@ type Products {
 input Product_where {
   title: Product_title_operator
   publishedOn: Product_publishedOn_operator
+  stripeProductID: Product_stripeProductID_operator
   bcProductID: Product_bcProductID_operator
   inventory: Product_inventory_operator
   unitPrice: Product_unitPrice_operator
@@ -3639,6 +3647,17 @@ input Product_publishedOn_operator {
   less_than_equal: DateTime
   less_than: DateTime
   like: DateTime
+  exists: Boolean
+}
+
+input Product_stripeProductID_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
   exists: Boolean
 }
 
@@ -3797,6 +3816,7 @@ input Product_id_operator {
 input Product_where_and {
   title: Product_title_operator
   publishedOn: Product_publishedOn_operator
+  stripeProductID: Product_stripeProductID_operator
   bcProductID: Product_bcProductID_operator
   inventory: Product_inventory_operator
   unitPrice: Product_unitPrice_operator
@@ -3820,6 +3840,7 @@ input Product_where_and {
 input Product_where_or {
   title: Product_title_operator
   publishedOn: Product_publishedOn_operator
+  stripeProductID: Product_stripeProductID_operator
   bcProductID: Product_bcProductID_operator
   inventory: Product_inventory_operator
   unitPrice: Product_unitPrice_operator
@@ -3853,6 +3874,7 @@ type ProductsDocAccessFields {
   title: ProductsDocAccessFields_title
   publishedOn: ProductsDocAccessFields_publishedOn
   layout: ProductsDocAccessFields_layout
+  stripeProductID: ProductsDocAccessFields_stripeProductID
   bcProductID: ProductsDocAccessFields_bcProductID
   inventory: ProductsDocAccessFields_inventory
   unitPrice: ProductsDocAccessFields_unitPrice
@@ -3935,6 +3957,29 @@ type ProductsDocAccessFields_layout_Update {
 }
 
 type ProductsDocAccessFields_layout_Delete {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_stripeProductID {
+  create: ProductsDocAccessFields_stripeProductID_Create
+  read: ProductsDocAccessFields_stripeProductID_Read
+  update: ProductsDocAccessFields_stripeProductID_Update
+  delete: ProductsDocAccessFields_stripeProductID_Delete
+}
+
+type ProductsDocAccessFields_stripeProductID_Create {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_stripeProductID_Read {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_stripeProductID_Update {
+  permission: Boolean!
+}
+
+type ProductsDocAccessFields_stripeProductID_Delete {
   permission: Boolean!
 }
 
@@ -4422,6 +4467,7 @@ type ProductVersion_Version {
   title: String
   publishedOn: DateTime
   layout: [ProductVersion_Version_Layout!]
+  stripeProductID: String
   bcProductID: String
   inventory: Float
   unitPrice: Float
@@ -4633,6 +4679,7 @@ input versionsProduct_where {
   parent: versionsProduct_parent_operator
   version__title: versionsProduct_version__title_operator
   version__publishedOn: versionsProduct_version__publishedOn_operator
+  version__stripeProductID: versionsProduct_version__stripeProductID_operator
   version__bcProductID: versionsProduct_version__bcProductID_operator
   version__inventory: versionsProduct_version__inventory_operator
   version__unitPrice: versionsProduct_version__unitPrice_operator
@@ -4683,6 +4730,17 @@ input versionsProduct_version__publishedOn_operator {
   less_than_equal: DateTime
   less_than: DateTime
   like: DateTime
+  exists: Boolean
+}
+
+input versionsProduct_version__stripeProductID_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
   exists: Boolean
 }
 
@@ -4870,6 +4928,7 @@ input versionsProduct_where_and {
   parent: versionsProduct_parent_operator
   version__title: versionsProduct_version__title_operator
   version__publishedOn: versionsProduct_version__publishedOn_operator
+  version__stripeProductID: versionsProduct_version__stripeProductID_operator
   version__bcProductID: versionsProduct_version__bcProductID_operator
   version__inventory: versionsProduct_version__inventory_operator
   version__unitPrice: versionsProduct_version__unitPrice_operator
@@ -4897,6 +4956,7 @@ input versionsProduct_where_or {
   parent: versionsProduct_parent_operator
   version__title: versionsProduct_version__title_operator
   version__publishedOn: versionsProduct_version__publishedOn_operator
+  version__stripeProductID: versionsProduct_version__stripeProductID_operator
   version__bcProductID: versionsProduct_version__bcProductID_operator
   version__inventory: versionsProduct_version__inventory_operator
   version__unitPrice: versionsProduct_version__unitPrice_operator
@@ -4923,8 +4983,12 @@ input versionsProduct_where_or {
 type Order {
   id: String
   orderedBy: User
-  stripePaymentIntentID: String
   total: Float!
+  currency: Order_currency!
+  status: Order_status!
+  paymentMethod: Order_paymentMethod!
+  pesapalDetails: Order_PesapalDetails
+  googlePayDetails: Order_GooglePayDetails
   items: [Order_Items!]
   updatedAt: DateTime
   createdAt: DateTime
@@ -4957,6 +5021,8 @@ enum User_roles {
 
 type User_Cart {
   items: [CartItems!]
+  createdOn: DateTime
+  lastModified: DateTime
 }
 
 type CartItems {
@@ -4969,6 +5035,33 @@ type CartItems {
 A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
 """
 scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
+
+enum Order_currency {
+  KES
+  USD
+}
+
+enum Order_status {
+  pending
+  invalid
+  completed
+  failed
+  reversed
+}
+
+enum Order_paymentMethod {
+  pesapal
+  googlepay
+}
+
+type Order_PesapalDetails {
+  orderTrackingId: String
+}
+
+type Order_GooglePayDetails {
+  transactionId: String
+  paymentMethodToken: String
+}
 
 type Order_Items {
   product: Product
@@ -4993,8 +5086,13 @@ type Orders {
 
 input Order_where {
   orderedBy: Order_orderedBy_operator
-  stripePaymentIntentID: Order_stripePaymentIntentID_operator
   total: Order_total_operator
+  currency: Order_currency_operator
+  status: Order_status_operator
+  paymentMethod: Order_paymentMethod_operator
+  pesapalDetails__orderTrackingId: Order_pesapalDetails__orderTrackingId_operator
+  googlePayDetails__transactionId: Order_googlePayDetails__transactionId_operator
+  googlePayDetails__paymentMethodToken: Order_googlePayDetails__paymentMethodToken_operator
   items__product: Order_items__product_operator
   items__price: Order_items__price_operator
   items__quantity: Order_items__quantity_operator
@@ -5015,7 +5113,58 @@ input Order_orderedBy_operator {
   exists: Boolean
 }
 
-input Order_stripePaymentIntentID_operator {
+input Order_total_operator {
+  equals: Float
+  not_equals: Float
+  greater_than_equal: Float
+  greater_than: Float
+  less_than_equal: Float
+  less_than: Float
+}
+
+input Order_currency_operator {
+  equals: Order_currency_Input
+  not_equals: Order_currency_Input
+  in: [Order_currency_Input]
+  not_in: [Order_currency_Input]
+  all: [Order_currency_Input]
+}
+
+enum Order_currency_Input {
+  KES
+  USD
+}
+
+input Order_status_operator {
+  equals: Order_status_Input
+  not_equals: Order_status_Input
+  in: [Order_status_Input]
+  not_in: [Order_status_Input]
+  all: [Order_status_Input]
+}
+
+enum Order_status_Input {
+  pending
+  invalid
+  completed
+  failed
+  reversed
+}
+
+input Order_paymentMethod_operator {
+  equals: Order_paymentMethod_Input
+  not_equals: Order_paymentMethod_Input
+  in: [Order_paymentMethod_Input]
+  not_in: [Order_paymentMethod_Input]
+  all: [Order_paymentMethod_Input]
+}
+
+enum Order_paymentMethod_Input {
+  pesapal
+  googlepay
+}
+
+input Order_pesapalDetails__orderTrackingId_operator {
   equals: String
   not_equals: String
   like: String
@@ -5026,13 +5175,26 @@ input Order_stripePaymentIntentID_operator {
   exists: Boolean
 }
 
-input Order_total_operator {
-  equals: Float
-  not_equals: Float
-  greater_than_equal: Float
-  greater_than: Float
-  less_than_equal: Float
-  less_than: Float
+input Order_googlePayDetails__transactionId_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
+  exists: Boolean
+}
+
+input Order_googlePayDetails__paymentMethodToken_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
+  exists: Boolean
 }
 
 input Order_items__product_operator {
@@ -5109,8 +5271,13 @@ input Order_id_operator {
 
 input Order_where_and {
   orderedBy: Order_orderedBy_operator
-  stripePaymentIntentID: Order_stripePaymentIntentID_operator
   total: Order_total_operator
+  currency: Order_currency_operator
+  status: Order_status_operator
+  paymentMethod: Order_paymentMethod_operator
+  pesapalDetails__orderTrackingId: Order_pesapalDetails__orderTrackingId_operator
+  googlePayDetails__transactionId: Order_googlePayDetails__transactionId_operator
+  googlePayDetails__paymentMethodToken: Order_googlePayDetails__paymentMethodToken_operator
   items__product: Order_items__product_operator
   items__price: Order_items__price_operator
   items__quantity: Order_items__quantity_operator
@@ -5124,8 +5291,13 @@ input Order_where_and {
 
 input Order_where_or {
   orderedBy: Order_orderedBy_operator
-  stripePaymentIntentID: Order_stripePaymentIntentID_operator
   total: Order_total_operator
+  currency: Order_currency_operator
+  status: Order_status_operator
+  paymentMethod: Order_paymentMethod_operator
+  pesapalDetails__orderTrackingId: Order_pesapalDetails__orderTrackingId_operator
+  googlePayDetails__transactionId: Order_googlePayDetails__transactionId_operator
+  googlePayDetails__paymentMethodToken: Order_googlePayDetails__paymentMethodToken_operator
   items__product: Order_items__product_operator
   items__price: Order_items__price_operator
   items__quantity: Order_items__quantity_operator
@@ -5147,8 +5319,12 @@ type ordersDocAccess {
 
 type OrdersDocAccessFields {
   orderedBy: OrdersDocAccessFields_orderedBy
-  stripePaymentIntentID: OrdersDocAccessFields_stripePaymentIntentID
   total: OrdersDocAccessFields_total
+  currency: OrdersDocAccessFields_currency
+  status: OrdersDocAccessFields_status
+  paymentMethod: OrdersDocAccessFields_paymentMethod
+  pesapalDetails: OrdersDocAccessFields_pesapalDetails
+  googlePayDetails: OrdersDocAccessFields_googlePayDetails
   items: OrdersDocAccessFields_items
   updatedAt: OrdersDocAccessFields_updatedAt
   createdAt: OrdersDocAccessFields_createdAt
@@ -5177,29 +5353,6 @@ type OrdersDocAccessFields_orderedBy_Delete {
   permission: Boolean!
 }
 
-type OrdersDocAccessFields_stripePaymentIntentID {
-  create: OrdersDocAccessFields_stripePaymentIntentID_Create
-  read: OrdersDocAccessFields_stripePaymentIntentID_Read
-  update: OrdersDocAccessFields_stripePaymentIntentID_Update
-  delete: OrdersDocAccessFields_stripePaymentIntentID_Delete
-}
-
-type OrdersDocAccessFields_stripePaymentIntentID_Create {
-  permission: Boolean!
-}
-
-type OrdersDocAccessFields_stripePaymentIntentID_Read {
-  permission: Boolean!
-}
-
-type OrdersDocAccessFields_stripePaymentIntentID_Update {
-  permission: Boolean!
-}
-
-type OrdersDocAccessFields_stripePaymentIntentID_Delete {
-  permission: Boolean!
-}
-
 type OrdersDocAccessFields_total {
   create: OrdersDocAccessFields_total_Create
   read: OrdersDocAccessFields_total_Read
@@ -5220,6 +5373,201 @@ type OrdersDocAccessFields_total_Update {
 }
 
 type OrdersDocAccessFields_total_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_currency {
+  create: OrdersDocAccessFields_currency_Create
+  read: OrdersDocAccessFields_currency_Read
+  update: OrdersDocAccessFields_currency_Update
+  delete: OrdersDocAccessFields_currency_Delete
+}
+
+type OrdersDocAccessFields_currency_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_currency_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_currency_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_currency_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_status {
+  create: OrdersDocAccessFields_status_Create
+  read: OrdersDocAccessFields_status_Read
+  update: OrdersDocAccessFields_status_Update
+  delete: OrdersDocAccessFields_status_Delete
+}
+
+type OrdersDocAccessFields_status_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_status_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_status_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_status_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_paymentMethod {
+  create: OrdersDocAccessFields_paymentMethod_Create
+  read: OrdersDocAccessFields_paymentMethod_Read
+  update: OrdersDocAccessFields_paymentMethod_Update
+  delete: OrdersDocAccessFields_paymentMethod_Delete
+}
+
+type OrdersDocAccessFields_paymentMethod_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_paymentMethod_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_paymentMethod_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_paymentMethod_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails {
+  create: OrdersDocAccessFields_pesapalDetails_Create
+  read: OrdersDocAccessFields_pesapalDetails_Read
+  update: OrdersDocAccessFields_pesapalDetails_Update
+  delete: OrdersDocAccessFields_pesapalDetails_Delete
+  fields: OrdersDocAccessFields_pesapalDetails_Fields
+}
+
+type OrdersDocAccessFields_pesapalDetails_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails_Fields {
+  orderTrackingId: OrdersDocAccessFields_pesapalDetails_orderTrackingId
+}
+
+type OrdersDocAccessFields_pesapalDetails_orderTrackingId {
+  create: OrdersDocAccessFields_pesapalDetails_orderTrackingId_Create
+  read: OrdersDocAccessFields_pesapalDetails_orderTrackingId_Read
+  update: OrdersDocAccessFields_pesapalDetails_orderTrackingId_Update
+  delete: OrdersDocAccessFields_pesapalDetails_orderTrackingId_Delete
+}
+
+type OrdersDocAccessFields_pesapalDetails_orderTrackingId_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails_orderTrackingId_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails_orderTrackingId_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_pesapalDetails_orderTrackingId_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails {
+  create: OrdersDocAccessFields_googlePayDetails_Create
+  read: OrdersDocAccessFields_googlePayDetails_Read
+  update: OrdersDocAccessFields_googlePayDetails_Update
+  delete: OrdersDocAccessFields_googlePayDetails_Delete
+  fields: OrdersDocAccessFields_googlePayDetails_Fields
+}
+
+type OrdersDocAccessFields_googlePayDetails_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_Fields {
+  transactionId: OrdersDocAccessFields_googlePayDetails_transactionId
+  paymentMethodToken: OrdersDocAccessFields_googlePayDetails_paymentMethodToken
+}
+
+type OrdersDocAccessFields_googlePayDetails_transactionId {
+  create: OrdersDocAccessFields_googlePayDetails_transactionId_Create
+  read: OrdersDocAccessFields_googlePayDetails_transactionId_Read
+  update: OrdersDocAccessFields_googlePayDetails_transactionId_Update
+  delete: OrdersDocAccessFields_googlePayDetails_transactionId_Delete
+}
+
+type OrdersDocAccessFields_googlePayDetails_transactionId_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_transactionId_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_transactionId_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_transactionId_Delete {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_paymentMethodToken {
+  create: OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Create
+  read: OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Read
+  update: OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Update
+  delete: OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Delete
+}
+
+type OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Create {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Read {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Update {
+  permission: Boolean!
+}
+
+type OrdersDocAccessFields_googlePayDetails_paymentMethodToken_Delete {
   permission: Boolean!
 }
 
@@ -6352,6 +6700,8 @@ input User_where {
   cart__items__product: User_cart__items__product_operator
   cart__items__quantity: User_cart__items__quantity_operator
   cart__items__id: User_cart__items__id_operator
+  cart__createdOn: User_cart__createdOn_operator
+  cart__lastModified: User_cart__lastModified_operator
   skipSync: User_skipSync_operator
   updatedAt: User_updatedAt_operator
   createdAt: User_createdAt_operator
@@ -6436,6 +6786,28 @@ input User_cart__items__id_operator {
   exists: Boolean
 }
 
+input User_cart__createdOn_operator {
+  equals: DateTime
+  not_equals: DateTime
+  greater_than_equal: DateTime
+  greater_than: DateTime
+  less_than_equal: DateTime
+  less_than: DateTime
+  like: DateTime
+  exists: Boolean
+}
+
+input User_cart__lastModified_operator {
+  equals: DateTime
+  not_equals: DateTime
+  greater_than_equal: DateTime
+  greater_than: DateTime
+  less_than_equal: DateTime
+  less_than: DateTime
+  like: DateTime
+  exists: Boolean
+}
+
 input User_skipSync_operator {
   equals: Boolean
   not_equals: Boolean
@@ -6493,6 +6865,8 @@ input User_where_and {
   cart__items__product: User_cart__items__product_operator
   cart__items__quantity: User_cart__items__quantity_operator
   cart__items__id: User_cart__items__id_operator
+  cart__createdOn: User_cart__createdOn_operator
+  cart__lastModified: User_cart__lastModified_operator
   skipSync: User_skipSync_operator
   updatedAt: User_updatedAt_operator
   createdAt: User_createdAt_operator
@@ -6510,6 +6884,8 @@ input User_where_or {
   cart__items__product: User_cart__items__product_operator
   cart__items__quantity: User_cart__items__quantity_operator
   cart__items__id: User_cart__items__id_operator
+  cart__createdOn: User_cart__createdOn_operator
+  cart__lastModified: User_cart__lastModified_operator
   skipSync: User_skipSync_operator
   updatedAt: User_updatedAt_operator
   createdAt: User_createdAt_operator
@@ -6659,6 +7035,8 @@ type UsersDocAccessFields_cart_Delete {
 
 type UsersDocAccessFields_cart_Fields {
   items: UsersDocAccessFields_cart_items
+  createdOn: UsersDocAccessFields_cart_createdOn
+  lastModified: UsersDocAccessFields_cart_lastModified
 }
 
 type UsersDocAccessFields_cart_items {
@@ -6757,6 +7135,52 @@ type UsersDocAccessFields_cart_items_id_Update {
 }
 
 type UsersDocAccessFields_cart_items_id_Delete {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_createdOn {
+  create: UsersDocAccessFields_cart_createdOn_Create
+  read: UsersDocAccessFields_cart_createdOn_Read
+  update: UsersDocAccessFields_cart_createdOn_Update
+  delete: UsersDocAccessFields_cart_createdOn_Delete
+}
+
+type UsersDocAccessFields_cart_createdOn_Create {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_createdOn_Read {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_createdOn_Update {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_createdOn_Delete {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_lastModified {
+  create: UsersDocAccessFields_cart_lastModified_Create
+  read: UsersDocAccessFields_cart_lastModified_Read
+  update: UsersDocAccessFields_cart_lastModified_Update
+  delete: UsersDocAccessFields_cart_lastModified_Delete
+}
+
+type UsersDocAccessFields_cart_lastModified_Create {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_lastModified_Read {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_lastModified_Update {
+  permission: Boolean!
+}
+
+type UsersDocAccessFields_cart_lastModified_Delete {
   permission: Boolean!
 }
 
@@ -6905,6 +7329,271 @@ type usersMe {
   exp: Int
   token: String
   user: User
+}
+
+type ProductNotification {
+  id: String
+  productID: Product!
+  email: String
+  notified: Boolean
+  updatedAt: DateTime
+  createdAt: DateTime
+}
+
+type ProductNotifications {
+  docs: [ProductNotification]
+  hasNextPage: Boolean
+  hasPrevPage: Boolean
+  limit: Int
+  nextPage: Int
+  offset: Int
+  page: Int
+  pagingCounter: Int
+  prevPage: Int
+  totalDocs: Int
+  totalPages: Int
+}
+
+input ProductNotification_where {
+  productID: ProductNotification_productID_operator
+  email: ProductNotification_email_operator
+  notified: ProductNotification_notified_operator
+  updatedAt: ProductNotification_updatedAt_operator
+  createdAt: ProductNotification_createdAt_operator
+  id: ProductNotification_id_operator
+  AND: [ProductNotification_where_and]
+  OR: [ProductNotification_where_or]
+}
+
+input ProductNotification_productID_operator {
+  equals: JSON
+  not_equals: JSON
+  in: [JSON]
+  not_in: [JSON]
+  all: [JSON]
+}
+
+input ProductNotification_email_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
+  exists: Boolean
+}
+
+input ProductNotification_notified_operator {
+  equals: Boolean
+  not_equals: Boolean
+  exists: Boolean
+}
+
+input ProductNotification_updatedAt_operator {
+  equals: DateTime
+  not_equals: DateTime
+  greater_than_equal: DateTime
+  greater_than: DateTime
+  less_than_equal: DateTime
+  less_than: DateTime
+  like: DateTime
+  exists: Boolean
+}
+
+input ProductNotification_createdAt_operator {
+  equals: DateTime
+  not_equals: DateTime
+  greater_than_equal: DateTime
+  greater_than: DateTime
+  less_than_equal: DateTime
+  less_than: DateTime
+  like: DateTime
+  exists: Boolean
+}
+
+input ProductNotification_id_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
+  exists: Boolean
+}
+
+input ProductNotification_where_and {
+  productID: ProductNotification_productID_operator
+  email: ProductNotification_email_operator
+  notified: ProductNotification_notified_operator
+  updatedAt: ProductNotification_updatedAt_operator
+  createdAt: ProductNotification_createdAt_operator
+  id: ProductNotification_id_operator
+  AND: [ProductNotification_where_and]
+  OR: [ProductNotification_where_or]
+}
+
+input ProductNotification_where_or {
+  productID: ProductNotification_productID_operator
+  email: ProductNotification_email_operator
+  notified: ProductNotification_notified_operator
+  updatedAt: ProductNotification_updatedAt_operator
+  createdAt: ProductNotification_createdAt_operator
+  id: ProductNotification_id_operator
+  AND: [ProductNotification_where_and]
+  OR: [ProductNotification_where_or]
+}
+
+type productNotificationsDocAccess {
+  fields: ProductNotificationsDocAccessFields
+  create: ProductNotificationsCreateDocAccess
+  read: ProductNotificationsReadDocAccess
+  update: ProductNotificationsUpdateDocAccess
+  delete: ProductNotificationsDeleteDocAccess
+}
+
+type ProductNotificationsDocAccessFields {
+  productID: ProductNotificationsDocAccessFields_productID
+  email: ProductNotificationsDocAccessFields_email
+  notified: ProductNotificationsDocAccessFields_notified
+  updatedAt: ProductNotificationsDocAccessFields_updatedAt
+  createdAt: ProductNotificationsDocAccessFields_createdAt
+}
+
+type ProductNotificationsDocAccessFields_productID {
+  create: ProductNotificationsDocAccessFields_productID_Create
+  read: ProductNotificationsDocAccessFields_productID_Read
+  update: ProductNotificationsDocAccessFields_productID_Update
+  delete: ProductNotificationsDocAccessFields_productID_Delete
+}
+
+type ProductNotificationsDocAccessFields_productID_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_productID_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_productID_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_productID_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_email {
+  create: ProductNotificationsDocAccessFields_email_Create
+  read: ProductNotificationsDocAccessFields_email_Read
+  update: ProductNotificationsDocAccessFields_email_Update
+  delete: ProductNotificationsDocAccessFields_email_Delete
+}
+
+type ProductNotificationsDocAccessFields_email_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_email_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_email_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_email_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_notified {
+  create: ProductNotificationsDocAccessFields_notified_Create
+  read: ProductNotificationsDocAccessFields_notified_Read
+  update: ProductNotificationsDocAccessFields_notified_Update
+  delete: ProductNotificationsDocAccessFields_notified_Delete
+}
+
+type ProductNotificationsDocAccessFields_notified_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_notified_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_notified_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_notified_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_updatedAt {
+  create: ProductNotificationsDocAccessFields_updatedAt_Create
+  read: ProductNotificationsDocAccessFields_updatedAt_Read
+  update: ProductNotificationsDocAccessFields_updatedAt_Update
+  delete: ProductNotificationsDocAccessFields_updatedAt_Delete
+}
+
+type ProductNotificationsDocAccessFields_updatedAt_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_updatedAt_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_updatedAt_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_updatedAt_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_createdAt {
+  create: ProductNotificationsDocAccessFields_createdAt_Create
+  read: ProductNotificationsDocAccessFields_createdAt_Read
+  update: ProductNotificationsDocAccessFields_createdAt_Update
+  delete: ProductNotificationsDocAccessFields_createdAt_Delete
+}
+
+type ProductNotificationsDocAccessFields_createdAt_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_createdAt_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_createdAt_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsDocAccessFields_createdAt_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsCreateDocAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type ProductNotificationsReadDocAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type ProductNotificationsUpdateDocAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type ProductNotificationsDeleteDocAccess {
+  permission: Boolean!
+  where: JSONObject
 }
 
 type Redirect {
@@ -7263,6 +7952,311 @@ type RedirectsUpdateDocAccess {
 }
 
 type RedirectsDeleteDocAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type Search {
+  id: String
+  title: String
+  priority: Float
+  doc: Search_Doc_Relationship!
+  updatedAt: DateTime
+  createdAt: DateTime
+}
+
+type Search_Doc_Relationship {
+  relationTo: Search_Doc_RelationTo
+  value: Search_Doc
+}
+
+enum Search_Doc_RelationTo {
+  products
+}
+
+union Search_Doc = Product
+
+type Searches {
+  docs: [Search]
+  hasNextPage: Boolean
+  hasPrevPage: Boolean
+  limit: Int
+  nextPage: Int
+  offset: Int
+  page: Int
+  pagingCounter: Int
+  prevPage: Int
+  totalDocs: Int
+  totalPages: Int
+}
+
+input Search_where {
+  title: Search_title_operator
+  priority: Search_priority_operator
+  doc: Search_doc_Relation
+  updatedAt: Search_updatedAt_operator
+  createdAt: Search_createdAt_operator
+  id: Search_id_operator
+  AND: [Search_where_and]
+  OR: [Search_where_or]
+}
+
+input Search_title_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
+  exists: Boolean
+}
+
+input Search_priority_operator {
+  equals: Float
+  not_equals: Float
+  greater_than_equal: Float
+  greater_than: Float
+  less_than_equal: Float
+  less_than: Float
+  exists: Boolean
+}
+
+input Search_doc_Relation {
+  relationTo: Search_doc_Relation_RelationTo
+  value: JSON
+}
+
+enum Search_doc_Relation_RelationTo {
+  products
+}
+
+input Search_updatedAt_operator {
+  equals: DateTime
+  not_equals: DateTime
+  greater_than_equal: DateTime
+  greater_than: DateTime
+  less_than_equal: DateTime
+  less_than: DateTime
+  like: DateTime
+  exists: Boolean
+}
+
+input Search_createdAt_operator {
+  equals: DateTime
+  not_equals: DateTime
+  greater_than_equal: DateTime
+  greater_than: DateTime
+  less_than_equal: DateTime
+  less_than: DateTime
+  like: DateTime
+  exists: Boolean
+}
+
+input Search_id_operator {
+  equals: String
+  not_equals: String
+  like: String
+  contains: String
+  in: [String]
+  not_in: [String]
+  all: [String]
+  exists: Boolean
+}
+
+input Search_where_and {
+  title: Search_title_operator
+  priority: Search_priority_operator
+  doc: Search_doc_Relation
+  updatedAt: Search_updatedAt_operator
+  createdAt: Search_createdAt_operator
+  id: Search_id_operator
+  AND: [Search_where_and]
+  OR: [Search_where_or]
+}
+
+input Search_where_or {
+  title: Search_title_operator
+  priority: Search_priority_operator
+  doc: Search_doc_Relation
+  updatedAt: Search_updatedAt_operator
+  createdAt: Search_createdAt_operator
+  id: Search_id_operator
+  AND: [Search_where_and]
+  OR: [Search_where_or]
+}
+
+type searchDocAccess {
+  fields: SearchDocAccessFields
+  create: SearchCreateDocAccess
+  read: SearchReadDocAccess
+  update: SearchUpdateDocAccess
+  delete: SearchDeleteDocAccess
+}
+
+type SearchDocAccessFields {
+  title: SearchDocAccessFields_title
+  priority: SearchDocAccessFields_priority
+  doc: SearchDocAccessFields_doc
+  docUrl: SearchDocAccessFields_docUrl
+  updatedAt: SearchDocAccessFields_updatedAt
+  createdAt: SearchDocAccessFields_createdAt
+}
+
+type SearchDocAccessFields_title {
+  create: SearchDocAccessFields_title_Create
+  read: SearchDocAccessFields_title_Read
+  update: SearchDocAccessFields_title_Update
+  delete: SearchDocAccessFields_title_Delete
+}
+
+type SearchDocAccessFields_title_Create {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_title_Read {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_title_Update {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_title_Delete {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_priority {
+  create: SearchDocAccessFields_priority_Create
+  read: SearchDocAccessFields_priority_Read
+  update: SearchDocAccessFields_priority_Update
+  delete: SearchDocAccessFields_priority_Delete
+}
+
+type SearchDocAccessFields_priority_Create {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_priority_Read {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_priority_Update {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_priority_Delete {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_doc {
+  create: SearchDocAccessFields_doc_Create
+  read: SearchDocAccessFields_doc_Read
+  update: SearchDocAccessFields_doc_Update
+  delete: SearchDocAccessFields_doc_Delete
+}
+
+type SearchDocAccessFields_doc_Create {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_doc_Read {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_doc_Update {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_doc_Delete {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_docUrl {
+  create: SearchDocAccessFields_docUrl_Create
+  read: SearchDocAccessFields_docUrl_Read
+  update: SearchDocAccessFields_docUrl_Update
+  delete: SearchDocAccessFields_docUrl_Delete
+}
+
+type SearchDocAccessFields_docUrl_Create {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_docUrl_Read {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_docUrl_Update {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_docUrl_Delete {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_updatedAt {
+  create: SearchDocAccessFields_updatedAt_Create
+  read: SearchDocAccessFields_updatedAt_Read
+  update: SearchDocAccessFields_updatedAt_Update
+  delete: SearchDocAccessFields_updatedAt_Delete
+}
+
+type SearchDocAccessFields_updatedAt_Create {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_updatedAt_Read {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_updatedAt_Update {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_updatedAt_Delete {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_createdAt {
+  create: SearchDocAccessFields_createdAt_Create
+  read: SearchDocAccessFields_createdAt_Read
+  update: SearchDocAccessFields_createdAt_Update
+  delete: SearchDocAccessFields_createdAt_Delete
+}
+
+type SearchDocAccessFields_createdAt_Create {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_createdAt_Read {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_createdAt_Update {
+  permission: Boolean!
+}
+
+type SearchDocAccessFields_createdAt_Delete {
+  permission: Boolean!
+}
+
+type SearchCreateDocAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type SearchReadDocAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type SearchUpdateDocAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type SearchDeleteDocAccess {
   permission: Boolean!
   where: JSONObject
 }
@@ -8656,7 +9650,9 @@ type Access {
   media: mediaAccess
   categories: categoriesAccess
   users: usersAccess
+  productNotifications: productNotificationsAccess
   redirects: redirectsAccess
+  search: searchAccess
   payload_preferences: payload_preferencesAccess
   settings: settingsAccess
   header: headerAccess
@@ -9377,6 +10373,7 @@ type ProductsFields {
   title: ProductsFields_title
   publishedOn: ProductsFields_publishedOn
   layout: ProductsFields_layout
+  stripeProductID: ProductsFields_stripeProductID
   bcProductID: ProductsFields_bcProductID
   inventory: ProductsFields_inventory
   unitPrice: ProductsFields_unitPrice
@@ -9459,6 +10456,29 @@ type ProductsFields_layout_Update {
 }
 
 type ProductsFields_layout_Delete {
+  permission: Boolean!
+}
+
+type ProductsFields_stripeProductID {
+  create: ProductsFields_stripeProductID_Create
+  read: ProductsFields_stripeProductID_Read
+  update: ProductsFields_stripeProductID_Update
+  delete: ProductsFields_stripeProductID_Delete
+}
+
+type ProductsFields_stripeProductID_Create {
+  permission: Boolean!
+}
+
+type ProductsFields_stripeProductID_Read {
+  permission: Boolean!
+}
+
+type ProductsFields_stripeProductID_Update {
+  permission: Boolean!
+}
+
+type ProductsFields_stripeProductID_Delete {
   permission: Boolean!
 }
 
@@ -9943,8 +10963,12 @@ type ordersAccess {
 
 type OrdersFields {
   orderedBy: OrdersFields_orderedBy
-  stripePaymentIntentID: OrdersFields_stripePaymentIntentID
   total: OrdersFields_total
+  currency: OrdersFields_currency
+  status: OrdersFields_status
+  paymentMethod: OrdersFields_paymentMethod
+  pesapalDetails: OrdersFields_pesapalDetails
+  googlePayDetails: OrdersFields_googlePayDetails
   items: OrdersFields_items
   updatedAt: OrdersFields_updatedAt
   createdAt: OrdersFields_createdAt
@@ -9973,29 +10997,6 @@ type OrdersFields_orderedBy_Delete {
   permission: Boolean!
 }
 
-type OrdersFields_stripePaymentIntentID {
-  create: OrdersFields_stripePaymentIntentID_Create
-  read: OrdersFields_stripePaymentIntentID_Read
-  update: OrdersFields_stripePaymentIntentID_Update
-  delete: OrdersFields_stripePaymentIntentID_Delete
-}
-
-type OrdersFields_stripePaymentIntentID_Create {
-  permission: Boolean!
-}
-
-type OrdersFields_stripePaymentIntentID_Read {
-  permission: Boolean!
-}
-
-type OrdersFields_stripePaymentIntentID_Update {
-  permission: Boolean!
-}
-
-type OrdersFields_stripePaymentIntentID_Delete {
-  permission: Boolean!
-}
-
 type OrdersFields_total {
   create: OrdersFields_total_Create
   read: OrdersFields_total_Read
@@ -10016,6 +11017,201 @@ type OrdersFields_total_Update {
 }
 
 type OrdersFields_total_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_currency {
+  create: OrdersFields_currency_Create
+  read: OrdersFields_currency_Read
+  update: OrdersFields_currency_Update
+  delete: OrdersFields_currency_Delete
+}
+
+type OrdersFields_currency_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_currency_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_currency_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_currency_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_status {
+  create: OrdersFields_status_Create
+  read: OrdersFields_status_Read
+  update: OrdersFields_status_Update
+  delete: OrdersFields_status_Delete
+}
+
+type OrdersFields_status_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_status_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_status_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_status_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_paymentMethod {
+  create: OrdersFields_paymentMethod_Create
+  read: OrdersFields_paymentMethod_Read
+  update: OrdersFields_paymentMethod_Update
+  delete: OrdersFields_paymentMethod_Delete
+}
+
+type OrdersFields_paymentMethod_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_paymentMethod_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_paymentMethod_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_paymentMethod_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails {
+  create: OrdersFields_pesapalDetails_Create
+  read: OrdersFields_pesapalDetails_Read
+  update: OrdersFields_pesapalDetails_Update
+  delete: OrdersFields_pesapalDetails_Delete
+  fields: OrdersFields_pesapalDetails_Fields
+}
+
+type OrdersFields_pesapalDetails_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails_Fields {
+  orderTrackingId: OrdersFields_pesapalDetails_orderTrackingId
+}
+
+type OrdersFields_pesapalDetails_orderTrackingId {
+  create: OrdersFields_pesapalDetails_orderTrackingId_Create
+  read: OrdersFields_pesapalDetails_orderTrackingId_Read
+  update: OrdersFields_pesapalDetails_orderTrackingId_Update
+  delete: OrdersFields_pesapalDetails_orderTrackingId_Delete
+}
+
+type OrdersFields_pesapalDetails_orderTrackingId_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails_orderTrackingId_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails_orderTrackingId_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_pesapalDetails_orderTrackingId_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails {
+  create: OrdersFields_googlePayDetails_Create
+  read: OrdersFields_googlePayDetails_Read
+  update: OrdersFields_googlePayDetails_Update
+  delete: OrdersFields_googlePayDetails_Delete
+  fields: OrdersFields_googlePayDetails_Fields
+}
+
+type OrdersFields_googlePayDetails_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_Fields {
+  transactionId: OrdersFields_googlePayDetails_transactionId
+  paymentMethodToken: OrdersFields_googlePayDetails_paymentMethodToken
+}
+
+type OrdersFields_googlePayDetails_transactionId {
+  create: OrdersFields_googlePayDetails_transactionId_Create
+  read: OrdersFields_googlePayDetails_transactionId_Read
+  update: OrdersFields_googlePayDetails_transactionId_Update
+  delete: OrdersFields_googlePayDetails_transactionId_Delete
+}
+
+type OrdersFields_googlePayDetails_transactionId_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_transactionId_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_transactionId_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_transactionId_Delete {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_paymentMethodToken {
+  create: OrdersFields_googlePayDetails_paymentMethodToken_Create
+  read: OrdersFields_googlePayDetails_paymentMethodToken_Read
+  update: OrdersFields_googlePayDetails_paymentMethodToken_Update
+  delete: OrdersFields_googlePayDetails_paymentMethodToken_Delete
+}
+
+type OrdersFields_googlePayDetails_paymentMethodToken_Create {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_paymentMethodToken_Read {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_paymentMethodToken_Update {
+  permission: Boolean!
+}
+
+type OrdersFields_googlePayDetails_paymentMethodToken_Delete {
   permission: Boolean!
 }
 
@@ -10918,6 +12114,8 @@ type UsersFields_cart_Delete {
 
 type UsersFields_cart_Fields {
   items: UsersFields_cart_items
+  createdOn: UsersFields_cart_createdOn
+  lastModified: UsersFields_cart_lastModified
 }
 
 type UsersFields_cart_items {
@@ -11016,6 +12214,52 @@ type UsersFields_cart_items_id_Update {
 }
 
 type UsersFields_cart_items_id_Delete {
+  permission: Boolean!
+}
+
+type UsersFields_cart_createdOn {
+  create: UsersFields_cart_createdOn_Create
+  read: UsersFields_cart_createdOn_Read
+  update: UsersFields_cart_createdOn_Update
+  delete: UsersFields_cart_createdOn_Delete
+}
+
+type UsersFields_cart_createdOn_Create {
+  permission: Boolean!
+}
+
+type UsersFields_cart_createdOn_Read {
+  permission: Boolean!
+}
+
+type UsersFields_cart_createdOn_Update {
+  permission: Boolean!
+}
+
+type UsersFields_cart_createdOn_Delete {
+  permission: Boolean!
+}
+
+type UsersFields_cart_lastModified {
+  create: UsersFields_cart_lastModified_Create
+  read: UsersFields_cart_lastModified_Read
+  update: UsersFields_cart_lastModified_Update
+  delete: UsersFields_cart_lastModified_Delete
+}
+
+type UsersFields_cart_lastModified_Create {
+  permission: Boolean!
+}
+
+type UsersFields_cart_lastModified_Read {
+  permission: Boolean!
+}
+
+type UsersFields_cart_lastModified_Update {
+  permission: Boolean!
+}
+
+type UsersFields_cart_lastModified_Delete {
   permission: Boolean!
 }
 
@@ -11155,6 +12399,157 @@ type UsersDeleteAccess {
 }
 
 type UsersUnlockAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type productNotificationsAccess {
+  fields: ProductNotificationsFields
+  create: ProductNotificationsCreateAccess
+  read: ProductNotificationsReadAccess
+  update: ProductNotificationsUpdateAccess
+  delete: ProductNotificationsDeleteAccess
+}
+
+type ProductNotificationsFields {
+  productID: ProductNotificationsFields_productID
+  email: ProductNotificationsFields_email
+  notified: ProductNotificationsFields_notified
+  updatedAt: ProductNotificationsFields_updatedAt
+  createdAt: ProductNotificationsFields_createdAt
+}
+
+type ProductNotificationsFields_productID {
+  create: ProductNotificationsFields_productID_Create
+  read: ProductNotificationsFields_productID_Read
+  update: ProductNotificationsFields_productID_Update
+  delete: ProductNotificationsFields_productID_Delete
+}
+
+type ProductNotificationsFields_productID_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_productID_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_productID_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_productID_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_email {
+  create: ProductNotificationsFields_email_Create
+  read: ProductNotificationsFields_email_Read
+  update: ProductNotificationsFields_email_Update
+  delete: ProductNotificationsFields_email_Delete
+}
+
+type ProductNotificationsFields_email_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_email_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_email_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_email_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_notified {
+  create: ProductNotificationsFields_notified_Create
+  read: ProductNotificationsFields_notified_Read
+  update: ProductNotificationsFields_notified_Update
+  delete: ProductNotificationsFields_notified_Delete
+}
+
+type ProductNotificationsFields_notified_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_notified_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_notified_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_notified_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_updatedAt {
+  create: ProductNotificationsFields_updatedAt_Create
+  read: ProductNotificationsFields_updatedAt_Read
+  update: ProductNotificationsFields_updatedAt_Update
+  delete: ProductNotificationsFields_updatedAt_Delete
+}
+
+type ProductNotificationsFields_updatedAt_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_updatedAt_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_updatedAt_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_updatedAt_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_createdAt {
+  create: ProductNotificationsFields_createdAt_Create
+  read: ProductNotificationsFields_createdAt_Read
+  update: ProductNotificationsFields_createdAt_Update
+  delete: ProductNotificationsFields_createdAt_Delete
+}
+
+type ProductNotificationsFields_createdAt_Create {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_createdAt_Read {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_createdAt_Update {
+  permission: Boolean!
+}
+
+type ProductNotificationsFields_createdAt_Delete {
+  permission: Boolean!
+}
+
+type ProductNotificationsCreateAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type ProductNotificationsReadAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type ProductNotificationsUpdateAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type ProductNotificationsDeleteAccess {
   permission: Boolean!
   where: JSONObject
 }
@@ -11358,6 +12753,181 @@ type RedirectsUpdateAccess {
 }
 
 type RedirectsDeleteAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type searchAccess {
+  fields: SearchFields
+  create: SearchCreateAccess
+  read: SearchReadAccess
+  update: SearchUpdateAccess
+  delete: SearchDeleteAccess
+}
+
+type SearchFields {
+  title: SearchFields_title
+  priority: SearchFields_priority
+  doc: SearchFields_doc
+  docUrl: SearchFields_docUrl
+  updatedAt: SearchFields_updatedAt
+  createdAt: SearchFields_createdAt
+}
+
+type SearchFields_title {
+  create: SearchFields_title_Create
+  read: SearchFields_title_Read
+  update: SearchFields_title_Update
+  delete: SearchFields_title_Delete
+}
+
+type SearchFields_title_Create {
+  permission: Boolean!
+}
+
+type SearchFields_title_Read {
+  permission: Boolean!
+}
+
+type SearchFields_title_Update {
+  permission: Boolean!
+}
+
+type SearchFields_title_Delete {
+  permission: Boolean!
+}
+
+type SearchFields_priority {
+  create: SearchFields_priority_Create
+  read: SearchFields_priority_Read
+  update: SearchFields_priority_Update
+  delete: SearchFields_priority_Delete
+}
+
+type SearchFields_priority_Create {
+  permission: Boolean!
+}
+
+type SearchFields_priority_Read {
+  permission: Boolean!
+}
+
+type SearchFields_priority_Update {
+  permission: Boolean!
+}
+
+type SearchFields_priority_Delete {
+  permission: Boolean!
+}
+
+type SearchFields_doc {
+  create: SearchFields_doc_Create
+  read: SearchFields_doc_Read
+  update: SearchFields_doc_Update
+  delete: SearchFields_doc_Delete
+}
+
+type SearchFields_doc_Create {
+  permission: Boolean!
+}
+
+type SearchFields_doc_Read {
+  permission: Boolean!
+}
+
+type SearchFields_doc_Update {
+  permission: Boolean!
+}
+
+type SearchFields_doc_Delete {
+  permission: Boolean!
+}
+
+type SearchFields_docUrl {
+  create: SearchFields_docUrl_Create
+  read: SearchFields_docUrl_Read
+  update: SearchFields_docUrl_Update
+  delete: SearchFields_docUrl_Delete
+}
+
+type SearchFields_docUrl_Create {
+  permission: Boolean!
+}
+
+type SearchFields_docUrl_Read {
+  permission: Boolean!
+}
+
+type SearchFields_docUrl_Update {
+  permission: Boolean!
+}
+
+type SearchFields_docUrl_Delete {
+  permission: Boolean!
+}
+
+type SearchFields_updatedAt {
+  create: SearchFields_updatedAt_Create
+  read: SearchFields_updatedAt_Read
+  update: SearchFields_updatedAt_Update
+  delete: SearchFields_updatedAt_Delete
+}
+
+type SearchFields_updatedAt_Create {
+  permission: Boolean!
+}
+
+type SearchFields_updatedAt_Read {
+  permission: Boolean!
+}
+
+type SearchFields_updatedAt_Update {
+  permission: Boolean!
+}
+
+type SearchFields_updatedAt_Delete {
+  permission: Boolean!
+}
+
+type SearchFields_createdAt {
+  create: SearchFields_createdAt_Create
+  read: SearchFields_createdAt_Read
+  update: SearchFields_createdAt_Update
+  delete: SearchFields_createdAt_Delete
+}
+
+type SearchFields_createdAt_Create {
+  permission: Boolean!
+}
+
+type SearchFields_createdAt_Read {
+  permission: Boolean!
+}
+
+type SearchFields_createdAt_Update {
+  permission: Boolean!
+}
+
+type SearchFields_createdAt_Delete {
+  permission: Boolean!
+}
+
+type SearchCreateAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type SearchReadAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type SearchUpdateAccess {
+  permission: Boolean!
+  where: JSONObject
+}
+
+type SearchDeleteAccess {
   permission: Boolean!
   where: JSONObject
 }
@@ -12238,9 +13808,15 @@ type Mutation {
   forgotPasswordUser(disableEmail: Boolean, email: String!, expiration: Int): Boolean!
   resetPasswordUser(password: String, token: String): usersResetPassword
   verifyEmailUser(token: String): Boolean
+  createProductNotification(data: mutationProductNotificationInput!, draft: Boolean): ProductNotification
+  updateProductNotification(id: String!, autosave: Boolean, data: mutationProductNotificationUpdateInput!, draft: Boolean): ProductNotification
+  deleteProductNotification(id: String!): ProductNotification
   createRedirect(data: mutationRedirectInput!, draft: Boolean): Redirect
   updateRedirect(id: String!, autosave: Boolean, data: mutationRedirectUpdateInput!, draft: Boolean): Redirect
   deleteRedirect(id: String!): Redirect
+  createSearch(data: mutationSearchInput!, draft: Boolean): Search
+  updateSearch(id: String!, autosave: Boolean, data: mutationSearchUpdateInput!, draft: Boolean): Search
+  deleteSearch(id: String!): Search
   createPayloadPreference(data: mutationPayloadPreferenceInput!, draft: Boolean): PayloadPreference
   updatePayloadPreference(id: String!, autosave: Boolean, data: mutationPayloadPreferenceUpdateInput!, draft: Boolean): PayloadPreference
   deletePayloadPreference(id: String!): PayloadPreference
@@ -12389,6 +13965,7 @@ input mutationProductInput {
   title: String!
   publishedOn: String
   layout: JSON
+  stripeProductID: String
   bcProductID: String
   inventory: Float
   unitPrice: Float
@@ -12420,6 +13997,7 @@ input mutationProductUpdateInput {
   title: String
   publishedOn: String
   layout: JSON
+  stripeProductID: String
   bcProductID: String
   inventory: Float
   unitPrice: Float
@@ -12449,11 +14027,42 @@ enum ProductUpdate__status_MutationInput {
 
 input mutationOrderInput {
   orderedBy: String
-  stripePaymentIntentID: String
   total: Float!
+  currency: Order_currency_MutationInput!
+  status: Order_status_MutationInput!
+  paymentMethod: Order_paymentMethod_MutationInput!
+  pesapalDetails: mutationOrder_PesapalDetailsInput
+  googlePayDetails: mutationOrder_GooglePayDetailsInput
   items: [mutationOrder_ItemsInput]
   updatedAt: String
   createdAt: String
+}
+
+enum Order_currency_MutationInput {
+  KES
+  USD
+}
+
+enum Order_status_MutationInput {
+  pending
+  invalid
+  completed
+  failed
+  reversed
+}
+
+enum Order_paymentMethod_MutationInput {
+  pesapal
+  googlepay
+}
+
+input mutationOrder_PesapalDetailsInput {
+  orderTrackingId: String
+}
+
+input mutationOrder_GooglePayDetailsInput {
+  transactionId: String
+  paymentMethodToken: String
 }
 
 input mutationOrder_ItemsInput {
@@ -12465,11 +14074,42 @@ input mutationOrder_ItemsInput {
 
 input mutationOrderUpdateInput {
   orderedBy: String
-  stripePaymentIntentID: String
   total: Float
+  currency: OrderUpdate_currency_MutationInput
+  status: OrderUpdate_status_MutationInput
+  paymentMethod: OrderUpdate_paymentMethod_MutationInput
+  pesapalDetails: mutationOrderUpdate_PesapalDetailsInput
+  googlePayDetails: mutationOrderUpdate_GooglePayDetailsInput
   items: [mutationOrderUpdate_ItemsInput]
   updatedAt: String
   createdAt: String
+}
+
+enum OrderUpdate_currency_MutationInput {
+  KES
+  USD
+}
+
+enum OrderUpdate_status_MutationInput {
+  pending
+  invalid
+  completed
+  failed
+  reversed
+}
+
+enum OrderUpdate_paymentMethod_MutationInput {
+  pesapal
+  googlepay
+}
+
+input mutationOrderUpdate_PesapalDetailsInput {
+  orderTrackingId: String
+}
+
+input mutationOrderUpdate_GooglePayDetailsInput {
+  transactionId: String
+  paymentMethodToken: String
 }
 
 input mutationOrderUpdate_ItemsInput {
@@ -12565,6 +14205,8 @@ enum User_roles_MutationInput {
 
 input mutationUser_CartInput {
   items: [mutationUser_Cart_ItemsInput]
+  createdOn: String
+  lastModified: String
 }
 
 input mutationUser_Cart_ItemsInput {
@@ -12599,6 +14241,8 @@ enum UserUpdate_roles_MutationInput {
 
 input mutationUserUpdate_CartInput {
   items: [mutationUserUpdate_Cart_ItemsInput]
+  createdOn: String
+  lastModified: String
 }
 
 input mutationUserUpdate_Cart_ItemsInput {
@@ -12627,6 +14271,22 @@ type usersLoginResult {
 type usersResetPassword {
   token: String
   user: User
+}
+
+input mutationProductNotificationInput {
+  productID: String
+  email: String
+  notified: Boolean
+  updatedAt: String
+  createdAt: String
+}
+
+input mutationProductNotificationUpdateInput {
+  productID: String
+  email: String
+  notified: Boolean
+  updatedAt: String
+  createdAt: String
 }
 
 input mutationRedirectInput {
@@ -12672,6 +14332,40 @@ input RedirectUpdate_To_ReferenceRelationshipInput {
 
 enum RedirectUpdate_To_ReferenceRelationshipInputRelationTo {
   pages
+  products
+}
+
+input mutationSearchInput {
+  title: String
+  priority: Float
+  doc: Search_DocRelationshipInput
+  updatedAt: String
+  createdAt: String
+}
+
+input Search_DocRelationshipInput {
+  relationTo: Search_DocRelationshipInputRelationTo
+  value: JSON
+}
+
+enum Search_DocRelationshipInputRelationTo {
+  products
+}
+
+input mutationSearchUpdateInput {
+  title: String
+  priority: Float
+  doc: SearchUpdate_DocRelationshipInput
+  updatedAt: String
+  createdAt: String
+}
+
+input SearchUpdate_DocRelationshipInput {
+  relationTo: SearchUpdate_DocRelationshipInputRelationTo
+  value: JSON
+}
+
+enum SearchUpdate_DocRelationshipInputRelationTo {
   products
 }
 

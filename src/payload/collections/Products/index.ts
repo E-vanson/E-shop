@@ -8,9 +8,9 @@ import { MediaBlock } from '../../blocks/MediaBlock'
 import { slugField } from '../../fields/slug'
 import { populateArchiveBlock } from '../../hooks/populateArchiveBlock'
 import { checkUserPurchases } from './access/checkUserPurchases'
-import { beforeProductChange } from './hooks/beforeChange'
 import { deleteProductFromCarts } from './hooks/deleteProductFromCarts'
 import { revalidateProduct } from './hooks/revalidateProduct'
+import { ProductSelect } from './ui/ProductSelect'
 
 const Products: CollectionConfig = {
   slug: 'products',
@@ -24,7 +24,6 @@ const Products: CollectionConfig = {
     },
   },
   hooks: {
-    beforeChange: [beforeProductChange],
     afterChange: [revalidateProduct],
     afterRead: [populateArchiveBlock],
     afterDelete: [deleteProductFromCarts],
@@ -80,6 +79,16 @@ const Products: CollectionConfig = {
         {
           label: 'Product Details',
           fields: [
+            {
+              name: 'stripeProductID',
+              label: 'Stripe Product',
+              type: 'text',
+              admin: {
+                components: {
+                  Field: ProductSelect,
+                },
+              },
+            },
             {
               name: 'bcProductID',
               label: 'Business Central Product',
