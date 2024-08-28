@@ -18,7 +18,6 @@ export const PRODUCT = `
       docs {
         id
         title
-        bcProductID
         ${PRODUCT_CATEGORIES}
         layout {
           ${CALL_TO_ACTION}
@@ -26,8 +25,6 @@ export const PRODUCT = `
           ${MEDIA_BLOCK}
           ${ARCHIVE_BLOCK}
         }
-        unitPrice
-        inventory
         enablePaywall
         relatedProducts {
           id
